@@ -1,0 +1,64 @@
+version: '3'
+services:
+
+  #PHP Service
+  custom-backend:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    image: backend
+    container_name: custom-backend
+    restart: unless-stopped
+    tty: true
+    working_dir: /var/www
+    volumes:
+      - ./backend/:/var/www
+      - ./backend/docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app-network
+
+  #Nginx Service
+  custom-webserver:
+    image: nginx:alpine
+    container_name: custom-webserver
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "8001:80"
+    volumes:
+      - ./backend/:/var/www
+      - ./backend/docker/nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - app-network
+
+  #Postgres Service
+  custom-db:
+    image: postgres
+    container_name: custom-db
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=customuser
+      - POSTGRES_PASSWORD=custompassword
+      - POSTGRES_DB=customdb
+    networks:
+      - app-network
+
+  #Service to access postgres from http
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
+
+#Volumes
+volumes:
+  dbdata:
+    driver: local
