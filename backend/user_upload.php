@@ -1,7 +1,5 @@
 <?php
 
-verifyAccess(); // Allow command line access only.
-
 // Available argument that could be used.
 $commands = [
     '--file'            => 'This argument is used to specify the name of the CSV to be parsed (File should be placed in backend folder).',
@@ -20,13 +18,17 @@ $encoding   = 'UTF-8'; // Encoding used for parsing column.
 $separator  = ','; // Separator used to explode each line.
 $enclosure  = '"'; // Enclosure used to decorate each field.
 $maxRowSize = 4096; // Maximum row size to be used for decoding.
+$successCode= "0;32"; // Color code for success messages.
+$errorCode  = "0;31"; // Color code for error messages.
+
+verifyAccess(); // Allow command line access only.
 
 $arguments = parseArguments($argv); // Fetch arguments.
 
 $dbConnection = getConnection($arguments); // Establish postgres connection.
 
 if(!$dbConnection)
-    die( "Database connection failed." ); // Terminate the script if the connection is not made.
+    die("\033[".$errorCode."mDatabase connection failed.\033[0m\n");// Terminate the script if the connection is not made.
 
 $found = false; // Used to check for valid command line request.
 // Process command line arguments.
@@ -66,6 +68,7 @@ function dryRun($csv)
     importUsers($csv, false);
 }
 
+// Insert record into the database.
 function insertRecord($array, $insertRecords)
 {
     global $results, $dbConnection;
@@ -123,7 +126,7 @@ function insertRecord($array, $insertRecords)
     }
 }    
 
-
+// Echo results.
 function displayResults()
 {
     global $results, $successCode, $errorCode;
@@ -139,7 +142,7 @@ function displayResults()
         }
     }
 }
-
+// Format cell data.
 function formatValue($array, $key)
 {
     $value = isset($array[$key]) ? $array[$key] : '';
@@ -147,13 +150,14 @@ function formatValue($array, $key)
     $value = ucfirst($value);
     return $value;
 }
-
+// Change the encoding to Utf8
 function convertEncoding($item) 
 {
     global $encoding;
     return iconv($encoding, "$encoding//IGNORE", $item);
 }
     
+// Check and remove not required values from csv data.
 function parseArray($array) 
 {
     $array = array_map('trim', $array);
@@ -191,10 +195,11 @@ function parseFile($filePath)
 // Import users
 function importUsers($csv, $insertRecords = true) 
 {
+    global $errorCode;
     $filePath = dirname(__FILE__). "/$csv";
 
     if(!file_exists($filePath)) // Check if the file exists.
-        die( "File does not exists $csv\n" );
+        die( "\033[".$errorCode."mFile does not exists $csv.\033[0m\n" );
 
     $records  = parseFile($filePath);
 
@@ -202,6 +207,7 @@ function importUsers($csv, $insertRecords = true)
         insertRecord($record, $insertRecords);
 }
 
+// Create use table if not exists.
 function createTable($connection)
 {
     global $successCode, $errorCode;
@@ -227,6 +233,7 @@ function createTable($connection)
 // Make database connection
 function getConnection(&$arguments)
 {
+    global $errorCode;
     try 
     {
         $u = isset($arguments['u']) ? $arguments['u'] : '';
@@ -234,9 +241,9 @@ function getConnection(&$arguments)
         $h = isset($arguments['h']) ? $arguments['h'] : '';
         // database credentails are mandatory.
         if($u == '' || $p == '' || $h == ''){
-            echo "Arguments -u, -p and -h are required arguments.";
+            echo "\033[".$errorCode."mArguments -u, -p and -h are required arguments.\033[0m\n";
             listCommands();
-            exit;
+            die('');
         }
         $dbname='customdb';
         $dbConnection = @pg_connect("host=$h dbname=$dbname user=$u password=$p");        
@@ -247,15 +254,15 @@ function getConnection(&$arguments)
     }
     catch (PDOException $e) 
     {
-        die( "Database connection failed" );
+        die("\033[".$errorCode."mDatabase connection failed.\033[0m\n");
     }
 }
 
 // List all available commands
 function listCommands()
 {
-    global $commands;
-    echo "FOLLOWING ARGUMENTS COULD BE USED:\033[0m\n\n";
+    global $commands;    
+    echo "FOLLOWING ARGUMENTS COULD BE USED\n\n";
     foreach($commands as $key => $command):
         echo "$key => $command\n\n";
     endforeach;
@@ -279,6 +286,7 @@ function parseArguments($arguments)
 // Allow to access via command line.
 function verifyAccess() 
 {
+    global $errorCode;
     if(PHP_SAPI != 'cli')
-        die('The script can be only accessed from the command line.');
+        die("\033[".$errorCode."mThe script can be only accessed from the command line.\033[0m\n\n");
 }
