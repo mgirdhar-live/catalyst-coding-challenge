@@ -47,6 +47,7 @@ foreach($arguments as $key => $argument):
     endswitch;
 endforeach;
 
+// List all commands if no option is selected.
 if(!$found)
     listCommands();
 
