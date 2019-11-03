@@ -83,11 +83,7 @@ function insertRecord($array, $insertRecords)
             $array['message'] = "Some error occured fetching the record($email).";
             $results['errors'][] = $array;    
         }
-        $result = @pg_fetch_assoc($result);    
-        if(!$result) {
-            $array['message'] = "Some error occured fetching the record($email).";
-            $results['errors'][] = $array;    
-        }
+        $result = @pg_fetch_assoc($result);
     }
     catch(Exception $e)
     {
