@@ -31,6 +31,8 @@ if(!$dbConnection)
 $found = false; // Used to check for valid command line request.
 // Process command line arguments.
 foreach($arguments as $key => $argument):
+    if($argument == 'dry_run')
+        continue;
     switch($key):
         case 'create_table':
             createTable($dbConnection);
@@ -40,12 +42,12 @@ foreach($arguments as $key => $argument):
             listCommands();
             $found = true;
         break;
-        case 'dry_run':
-            $found = true;
-
-        break;
         case 'file':
-            importUsers($argument);
+            $isDryRun = isset($arguments['dry_run']) ? true : false;
+            if($isDryRun)
+                dryRun($argument);
+            else
+                importUsers($argument);
             displayResults();
             $found = true;
         break;
@@ -58,7 +60,13 @@ endforeach;
 if(!$found)
     listCommands();   
 
-function insertRecord($array)
+function dryRun($csv) 
+{
+    echo "Dry run, no data is going to be inserted.\n";
+    importUsers($csv, false);
+}
+
+function insertRecord($array, $insertRecords)
 {
     global $results, $dbConnection;
     $name    = formatValue($array,'name');
@@ -94,7 +102,7 @@ function insertRecord($array)
         $array['message']    = $email. " is an invalid email.";
         $results['errors'][] = $array;
     }
-    else
+    elseif($insertRecords)
     {
         $array = [
             'name'    => $name,
@@ -181,7 +189,7 @@ function parseFile($filePath)
 }
     
 // Import users
-function importUsers($csv) 
+function importUsers($csv, $insertRecords = true) 
 {
     $filePath = dirname(__FILE__). "/$csv";
 
@@ -191,7 +199,7 @@ function importUsers($csv)
     $records  = parseFile($filePath);
 
     foreach($records as $record)
-        insertRecord($record);
+        insertRecord($record, $insertRecords);
 }
 
 function createTable($connection)
