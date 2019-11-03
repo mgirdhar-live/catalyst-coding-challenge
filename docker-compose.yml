@@ -13,7 +13,7 @@ services:
     working_dir: /var/www
     volumes:
       - ./backend/:/var/www
-      - ./backend/docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
     networks:
       - app-network
 
@@ -27,7 +27,7 @@ services:
       - "8001:80"
     volumes:
       - ./backend/:/var/www
-      - ./backend/docker/nginx/conf.d/:/etc/nginx/conf.d/
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
     networks:
       - app-network
 
@@ -48,6 +48,7 @@ services:
 
   #Service to access postgres from http
   adminer:
+    container_name: custom-adminer
     image: adminer
     restart: always
     ports:
