@@ -20,7 +20,8 @@ $enclosure  = '"'; // Enclosure used to decorate each field.
 $maxRowSize = 4096; // Maximum row size to be used for decoding.
 $successCode= "0;32"; // Color code for success messages.
 $errorCode  = "0;31"; // Color code for error messages.
-
+$dbName     = "customdb"; // Database name.
+$tableName  = 'users';    // Table name.
 verifyAccess(); // Allow command line access only.
 
 $arguments = parseArguments($argv); // Fetch arguments.
@@ -37,7 +38,7 @@ foreach($arguments as $key => $argument):
         continue;
     switch($key):
         case 'create_table':
-            createTable($dbConnection);
+            createTable();
             $found = true;
         break;
         case 'help':
@@ -64,24 +65,26 @@ if(!$found)
 
 function dryRun($csv) 
 {
-    echo "Dry run, no data is going to be inserted.\n";
+    global $successCode;
+    echo "\033[".$successCode."mDry run, no data is going to be added.\033[0m\n";
     importUsers($csv, false);
 }
 
 // Insert record into the database.
 function insertRecord($array, $insertRecords)
 {
-    global $results, $dbConnection;
+    global $results, $dbConnection, $tableName;
     $name    = formatValue($array,'name');
     $surname = formatValue($array,'surname');
     $email   = formatValue($array,'email');
 
     $result;
     try {
-        $result = @pg_query($dbConnection, "SELECT email FROM users WHERE email = '$email'");
+        $result = @pg_query($dbConnection, "SELECT email FROM $tableName WHERE email = '$email'");
         if(!$result) {
             $array['message'] = "Some error occured fetching the record($email).";
-            $results['errors'][] = $array;    
+            $results['errors'][] = $array;
+            return false;
         }
         $result = @pg_fetch_assoc($result);
     }
@@ -109,7 +112,7 @@ function insertRecord($array, $insertRecords)
             'email'   => $email
         ];
         try {
-            $sql = "INSERT INTO users(name, surname, email) VALUES('$name','$surname','$email')";
+            $sql = "INSERT INTO $tableName(name, surname, email) VALUES('$name','$surname','$email')";
             pg_query($dbConnection, $sql);
             $array['message'] = "$email successfully inserted.";
             $results['success'][] = $array;    
@@ -121,6 +124,32 @@ function insertRecord($array, $insertRecords)
         }
     }
 }    
+
+function checkIfTableExists()
+{
+    global $dbConnection, $dbName, $tableName, $errorCode;
+    $sql = "
+        SELECT EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE  table_catalog = '$dbName'
+        AND    table_name = '$tableName'
+    );
+    ";
+    try {
+        $result = @pg_query($dbConnection, $sql);
+        if(!$result)
+            echo "\033[".$errorCode."mSome error occured while checking table status.\033[0m\n";
+
+        $result = @pg_fetch_assoc($result);
+        if($result['exists'] === 'f')
+            die( "\033[".$errorCode."mUser table does not exists, Run --create_table command first.\033[0m\n" );
+            
+    }
+    catch(Exception $e) 
+    {
+        echo "\033[".$errorCode."mSome error occured while creating user table.\033[0m\n";
+    }    
+}
 
 // Echo results.
 function displayResults()
@@ -192,6 +221,9 @@ function parseFile($filePath)
 function importUsers($csv, $insertRecords = true) 
 {
     global $errorCode;
+
+    checkIfTableExists(); // Check if user table exists.
+
     $filePath = dirname(__FILE__). "/$csv";
 
     if(!file_exists($filePath)) // Check if the file exists.
@@ -204,32 +236,32 @@ function importUsers($csv, $insertRecords = true)
 }
 
 // Create use table if not exists.
-function createTable($connection)
+function createTable()
 {
-    global $successCode, $errorCode;
+    global $dbConnection, $successCode, $errorCode, $tableName;
     $sql = "
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE IF NOT EXISTS $tableName (
         id SERIAL PRIMARY KEY,
         name CHARACTER VARYING(100) NULL,
         surname CHARACTER VARYING(100) NULL,
         email CHARACTER VARYING(100) NOT NULL UNIQUE
     );
     ";
-    echo "\033[".$successCode."mUser table has been created successfully.\033[0m\n";
     try {
-        pg_query($connection, $sql);
+        pg_query($dbConnection, $sql);
+        echo "\033[".$successCode."mUser table has been created successfully.\033[0m\n";
     }
     catch(Exception $e) 
     {
         echo "\033[".$errorCode."mSome error occured while creating user table.\033[0m\n";
     }
-    return true;
+    return;
 }
 
 // Make database connection
 function getConnection(&$arguments)
 {
-    global $errorCode;
+    global $errorCode, $dbName;
     try 
     {
         $u = isset($arguments['u']) ? $arguments['u'] : '';
@@ -241,8 +273,7 @@ function getConnection(&$arguments)
             listCommands();
             die('');
         }
-        $dbname='customdb';
-        $dbConnection = @pg_connect("host=$h dbname=$dbname user=$u password=$p");        
+        $dbConnection = @pg_connect("host=$h dbname=$dbName user=$u password=$p");        
         unset($arguments['u']);
         unset($arguments['h']);
         unset($arguments['p']);
