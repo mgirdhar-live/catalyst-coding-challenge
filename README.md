@@ -16,14 +16,7 @@ CD to the project directory to run any docker-compose command.
 * Build: `docker-compose build`
 * Run: `docker-compose up`
 
-### Database Information
-
-#### User Table
-
-- Table Name: `User`
-- Serial Key: `id (Unsigned Integer)`
-
-## Command that can be used
+## Commands to run application
 * Run: `docker-compose exec custom-backend php user_upload.php -u=customuser -p=custompassword -h=custom-db --create_table`
 * Run: `docker-compose exec custom-backend php user_upload.php -u=customuser -p=custompassword -h=custom-db --file=user.csv`
 * Run: `docker-compose exec custom-backend php user_upload.php -u=customuser -p=custompassword -h=custom-db --file=user.csv --dry_run`
@@ -31,6 +24,17 @@ CD to the project directory to run any docker-compose command.
 Csv file should be placed in backend folder for instance backend/user.csv
 ```
 * Run: `docker-compose exec custom-backend php user_upload.php -u=customuser -p=custompassword -h=custom-db --help`
+
+### Database Information
+
+#### User Table
+
+- Table Name: `User`
+- Serial Key: `id (Unsigned Integer)`
+
+## Sample data & Testing
+* For testing, I have included the sample data here in this file: backend/user.csv. Please feel free to add more rows/data here and test.
+
 
 ## Resources
 
