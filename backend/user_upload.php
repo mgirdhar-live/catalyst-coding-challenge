@@ -100,18 +100,21 @@ function insertRecord($array, $insertRecords) {
         $array['message']    = $email. " already exists.";
         $results['errors'][] = $array;
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) { // show error, don't insert
-        $array['message']    = $email. " is an invalid email.";
+        if($email !== '')
+            $array['message']    = $email. " is an invalid email.";
+        else
+            $array['message']    = "Email is a required field.";       
         $results['errors'][] = $array;
     } elseif ($insertRecords) { // insert records
-        $array = [
-            'name'    => $name,
-            'surname' => $surname,
-            'email'   => $email
-        ];
-
         try {
-            $sql = "INSERT INTO $tableName(name, surname, email) VALUES('$name','$surname','$email')";
-            pg_query($dbConnection, $sql);
+            $sql = 'INSERT INTO '.$tableName.'(name, surname, email) VALUES("'.$name.'","'.$surname.'","'.$email.'")';
+            $result = @pg_query($dbConnection, $sql);
+            if(!$result)
+            {
+                $array['message'] = "Some error occured while inserting the record($email).";
+                $results['errors'][] = $array;
+                return;
+            }
             $array['message'] = "$email successfully inserted.";
             $results['success'][] = $array;    
         } catch (Exception $e) {
@@ -168,6 +171,7 @@ function formatValue($array, $key) {
     $value = isset($array[$key]) ? $array[$key] : '';
     $value = strtolower($value);
     $value = ucfirst($value);
+    $value = addslashes($value);
     return $value;
 }
 
@@ -191,7 +195,7 @@ function parseFile($filePath) {
     $content = [];
     $file = fopen($filePath, 'r');
     $fields = fgetcsv($file, $maxRowSize, $separator, $enclosure);
-
+    $fields = parseArray($fields);
     while ( ($row = fgetcsv($file, $maxRowSize, $separator, $enclosure)) !== false ) {
         if ( count($row) < 3 ) // skip empty lines
             continue;
