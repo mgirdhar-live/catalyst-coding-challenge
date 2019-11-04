@@ -33,7 +33,7 @@ if(!$dbConnection)
 $found = false; // Used to check for valid command line request.
 // Process command line arguments.
 foreach($arguments as $key => $argument):
-    if($argument == 'dry_run')
+    if($argument === 'dry_run')
         continue;
     switch($key):
         case 'create_table':
@@ -128,9 +128,9 @@ function displayResults()
     global $results, $successCode, $errorCode;
     foreach($results as $key => $result)
     {
-        if($key == 'success')
+        if($key === 'success')
             $colorCode = $successCode;
-        elseif($key == 'errors')
+        elseif($key === 'errors')
             $colorCode = $errorCode;
         foreach($result as $sResult)
         {
@@ -236,7 +236,7 @@ function getConnection(&$arguments)
         $p = isset($arguments['p']) ? $arguments['p'] : '';
         $h = isset($arguments['h']) ? $arguments['h'] : '';
         // database credentails are mandatory.
-        if($u == '' || $p == '' || $h == ''){
+        if($u === '' || $p === '' || $h === ''){
             echo "\033[".$errorCode."mArguments -u, -p and -h are required arguments.\033[0m\n";
             listCommands();
             die('');
