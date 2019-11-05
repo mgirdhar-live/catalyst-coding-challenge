@@ -1,5 +1,4 @@
-# Project
-
+sci
 Command line script to import users into postgress database.
 
 ## Getting Started
@@ -18,10 +17,10 @@ CD to the project directory to run any docker-compose command.
 
 ## Commands to run application
 * Run: `docker-compose exec custom-backend php user_upload.php -u=customuser -p=custompassword -h=custom-db --create_table`
-* Run: `docker-compose exec custom-backend php user_upload.php -u=customuser -p=custompassword -h=custom-db --file=user.csv`
-* Run: `docker-compose exec custom-backend php user_upload.php -u=customuser -p=custompassword -h=custom-db --file=user.csv --dry_run`
+* Run: `docker-compose exec custom-backend php user_upload.php -u=customuser -p=custompassword -h=custom-db --file=users.csv`
+* Run: `docker-compose exec custom-backend php user_upload.php -u=customuser -p=custompassword -h=custom-db --file=users.csv --dry_run`
 ```
-Csv file should be placed in backend folder for instance backend/user.csv
+Csv file should be placed in backend folder for instance backend/users.csv
 ```
 * Run: `docker-compose exec custom-backend php user_upload.php -u=customuser -p=custompassword -h=custom-db --help`
 
@@ -33,7 +32,7 @@ Csv file should be placed in backend folder for instance backend/user.csv
 - Serial Key: `id (Unsigned Integer)`
 
 ## Sample data & Testing
-* For testing, I have included the sample data here in this file: backend/user.csv. Please feel free to add more rows/data here and test.
+* For testing, I have included the sample data here in this file: backend/users.csv. Please feel free to add more rows/data here and test.
 
 
 ## Resources
