@@ -107,7 +107,7 @@ function insertRecord($array, $insertRecords) {
         $results['errors'][] = $array;
     } elseif ($insertRecords) { // insert records
         try {
-            $sql = 'INSERT INTO '.$tableName.'(name, surname, email) VALUES("'.$name.'","'.$surname.'","'.$email.'")';
+            $sql = "INSERT INTO $tableName(name, surname, email) VALUES('$name','$surname','$email')";
             $result = @pg_query($dbConnection, $sql);
             if(!$result)
             {
